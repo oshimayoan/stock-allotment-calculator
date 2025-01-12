@@ -6,62 +6,50 @@ import { Label } from '@/components/ui/label';
 import { LOT_SIZE } from '@/constants';
 import { calculateExponentialGrowthAllotment } from '@/lib/exponentialGrowth';
 import { getPriceList } from '@/lib/utils';
-import { useState } from 'react';
 import { TableEntry, useAllocationStore } from '@/stores/allocationStore';
+import * as yup from 'yup';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+const formSchema = yup.object({
+  highPrice: yup.number().label('High Price').required(),
+  lowPrice: yup
+    .number()
+    .label('Low Price')
+    .required()
+    .when('highPrice', (highPrice, schema) =>
+      highPrice ? schema.max(highPrice[0]) : schema
+    ),
+  priceTick: yup.number().label('Price Tick').required().min(1),
+  availableCapital: yup.number().label('Available Capital').required().min(1),
+});
+
+type FormData = yup.InferType<typeof formSchema>;
 
 export function AllocationForm() {
-  const [highPrice, setHighPrice] = useState<string>('');
-  const [lowPrice, setLowPrice] = useState<string>('');
-  const [priceTick, setPriceTick] = useState<string>('');
-  const [availableCapital, setAvailableCapital] = useState<string>('');
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
   const { setTableData, setSummary } = useAllocationStore();
 
-  const validateInputs = () => {
-    const newErrors: { [key: string]: string } = {};
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(formSchema),
+  });
 
-    if (!highPrice || isNaN(Number(highPrice)) || Number(highPrice) <= 0) {
-      newErrors.highPrice = 'Please enter a valid high price';
-    }
-    if (!lowPrice || isNaN(Number(lowPrice)) || Number(lowPrice) <= 0) {
-      newErrors.lowPrice = 'Please enter a valid low price';
-    }
-    if (Number(lowPrice) >= Number(highPrice)) {
-      newErrors.lowPrice = 'Low price must be less than high price';
-    }
-    if (!priceTick || isNaN(Number(priceTick)) || Number(priceTick) <= 0) {
-      newErrors.priceTick = 'Please enter a valid price tick';
-    }
-    if (
-      !availableCapital ||
-      isNaN(Number(availableCapital)) ||
-      Number(availableCapital) <= 0
-    ) {
-      newErrors.availableCapital = 'Please enter a valid available capital';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const calculateAllocation = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!validateInputs()) return;
-
+  const calculateAllocation = (data: FormData) => {
     const priceList = getPriceList(
-      Number(lowPrice),
-      Number(highPrice),
-      Number(priceTick)
+      Number(data.lowPrice),
+      Number(data.highPrice),
+      Number(data.priceTick)
     );
 
     const result = calculateExponentialGrowthAllotment(
-      Number(availableCapital),
+      Number(data.availableCapital),
       priceList
     );
 
-    const data: TableEntry[] = [];
+    const tableData: TableEntry[] = [];
 
     for (const price in result.purchases) {
       const entry: TableEntry = {
@@ -73,82 +61,80 @@ export function AllocationForm() {
         averagePurchasePrice: result.purchases[price].average,
       };
 
-      data.push(entry);
+      tableData.push(entry);
     }
 
-    setTableData(data.sort((a, b) => b.price - a.price));
+    setTableData(tableData.sort((a, b) => b.price - a.price));
 
     setSummary({
       totalCapitalUtilized: result.totalSum,
-      remainingCash: Number(availableCapital) - result.totalSum,
+      remainingCash: Number(data.availableCapital) - result.totalSum,
       weightedAveragePrice: result.finalAverage,
-      totalShares: data.reduce((sum, entry) => sum + entry.shares, 0),
+      totalShares: tableData.reduce((sum, entry) => sum + entry.shares, 0),
     });
   };
 
   return (
-    <form onSubmit={calculateAllocation}>
+    <form onSubmit={handleSubmit(calculateAllocation)}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="highPrice">High Price</Label>
           <Input
             required
+            {...register('highPrice')}
             id="highPrice"
             type="number"
             min={0}
             name="highPrice"
-            value={highPrice}
-            onChange={(e) => setHighPrice(e.target.value)}
             placeholder="Enter high price"
           />
           {errors.highPrice && (
-            <p className="text-red-500 text-sm">{errors.highPrice}</p>
+            <p className="text-red-500 text-sm">{errors.highPrice.message}</p>
           )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="lowPrice">Low Price</Label>
           <Input
             required
+            {...register('lowPrice')}
             id="lowPrice"
             type="number"
             min={0}
             name="lowPrice"
-            value={lowPrice}
-            onChange={(e) => setLowPrice(e.target.value)}
             placeholder="Enter low price"
           />
           {errors.lowPrice && (
-            <p className="text-red-500 text-sm">{errors.lowPrice}</p>
+            <p className="text-red-500 text-sm">{errors.lowPrice.message}</p>
           )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="priceTick">Price Tick</Label>
           <Input
             required
+            {...register('priceTick')}
             id="priceTick"
             type="number"
             name="priceTick"
-            value={priceTick}
-            onChange={(e) => setPriceTick(e.target.value)}
             placeholder="Enter price tick"
           />
           {errors.priceTick && (
-            <p className="text-red-500 text-sm">{errors.priceTick}</p>
+            <p className="text-red-500 text-sm">{errors.priceTick.message}</p>
           )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="availableCapital">Available Capital</Label>
           <Input
             required
+            {...register('availableCapital')}
             id="availableCapital"
             type="number"
             name="availableCapital"
-            value={availableCapital}
-            onChange={(e) => setAvailableCapital(e.target.value)}
             placeholder="Enter available capital"
           />
           {errors.availableCapital && (
-            <p className="text-red-500 text-sm">{errors.availableCapital}</p>
+            <p className="text-red-500 text-sm">
+              {errors.availableCapital.message}
+            </p>
           )}
         </div>
       </div>
