@@ -18,3 +18,12 @@ export function getPriceList(
 
   return priceList.reverse();
 }
+
+export function formatCurrency(value: number, locale = 'id-ID') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
