@@ -2,7 +2,7 @@
 
 import { useAllocationStore } from '@/stores/allocationStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumber } from '@/lib/utils';
 import { LOT_SIZE } from '@/constants';
 
 export function AllocationSummary() {
@@ -34,7 +34,8 @@ export function AllocationSummary() {
           <div>
             <p className="font-semibold">Total Shares:</p>
             <p>
-              {summary.totalShares} ({summary.totalShares / LOT_SIZE} lot)
+              {formatNumber(summary.totalShares)} (
+              {formatNumber(summary.totalShares / LOT_SIZE)} lot)
             </p>
           </div>
         </div>

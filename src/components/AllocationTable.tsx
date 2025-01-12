@@ -3,7 +3,7 @@
 import { useAllocationStore } from '@/stores/allocationStore';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumber } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -57,8 +57,8 @@ export function AllocationTable() {
                   <TableCell>
                     {entry.allocationPercentage.toFixed(2)}%
                   </TableCell>
-                  <TableCell>{entry.lots}</TableCell>
-                  <TableCell>{entry.shares}</TableCell>
+                  <TableCell>{formatNumber(entry.lots)}</TableCell>
+                  <TableCell>{formatNumber(entry.shares)}</TableCell>
                   <TableCell>{formatCurrency(entry.totalCost)}</TableCell>
                   <TableCell>
                     {formatCurrency(entry.averagePurchasePrice || 0)}

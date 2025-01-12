@@ -27,3 +27,10 @@ export function formatCurrency(value: number, locale = 'id-ID') {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+export function formatNumber(value: number, locale = 'id-ID') {
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
