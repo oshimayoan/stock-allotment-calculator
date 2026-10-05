@@ -23,7 +23,7 @@ export function formatCurrency(value: number, locale = 'id-ID') {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'IDR',
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
 }
