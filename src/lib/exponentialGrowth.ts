@@ -54,17 +54,16 @@ export function getCumulativeAverage(
   allotedLots: { [key: number]: number },
   priceList: number[]
 ) {
-  const allotedLotsArr = Object.values(allotedLots)
-    .sort((a, b) => a - b)
-    .slice(0, priceList.length);
+  let cumulativeLots = 0;
+  let cumulativeCost = 0;
 
-  const cumulativeLots = allotedLotsArr.reduce((acc, curr) => acc + curr, 0);
+  for (const price of priceList) {
+    const lots = allotedLots[price] ?? 0;
+    cumulativeLots += lots;
+    cumulativeCost += price * lots;
+  }
 
-  const cumulativeAverage =
-    priceList.reduce((acc, curr) => acc + curr * allotedLots[curr], 0) /
-    cumulativeLots;
-
-  return cumulativeAverage;
+  return cumulativeLots > 0 ? cumulativeCost / cumulativeLots : 0;
 }
 
 export function getPurchases(
